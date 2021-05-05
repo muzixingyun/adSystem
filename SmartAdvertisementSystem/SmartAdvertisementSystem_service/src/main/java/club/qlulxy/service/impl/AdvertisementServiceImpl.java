@@ -4,6 +4,7 @@ import club.qlulxy.dao.AdvertisementDao;
 import club.qlulxy.domain.Advertisement;
 import club.qlulxy.domain.StatisticData;
 import club.qlulxy.service.AdvertisementService;
+import club.qlulxy.utils.DateUtil;
 import com.github.pagehelper.PageHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -89,15 +91,20 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     @Override
     public StatisticData statisticData(String adName, Integer adId) {
         //Map<String, Integer> data = new HashMap<>();
+        int maleData;//男性人数
+        int femaleData;//女性人数
+        List<Integer> ageDataList;//各年龄段人数
+        List<Integer> nowWeekDataList;//本周数据
+        List<Integer> lastWeekDataList;//上周数据
         StatisticData data = new StatisticData();
         if (adName.equals("all")) {
             //查询各个性别人数
-            int maleData = advertisementDao.statisticAllGenderData("male");
-            int femaleData = advertisementDao.statisticAllGenderData("female");
+            maleData = advertisementDao.statisticAllGenderData("male");
+            femaleData = advertisementDao.statisticAllGenderData("female");
             data.setMaleNum(maleData);
             data.setFemaleNum(femaleData);
             //根据年龄的ageList查询所有的年龄段人数
-            List<Integer> ageDataList = new ArrayList<>();
+            ageDataList = new ArrayList<>();
             int min = 0, max = 0;
             for (int i = 0; i < 8; i++) {
                 min = ageList[i];
@@ -106,9 +113,84 @@ public class AdvertisementServiceImpl implements AdvertisementService {
                 ageDataList.add(num);
             }
             data.setAgeDataList(ageDataList);
-            System.out.println(ageDataList.toString());
+            //根据日期查询一星期内的播放数量
+            String now = DateUtil.date2String(new Date(), "yy-MM-dd HH:mm:ss");
+            //获取本周的数据
+            nowWeekDataList = new ArrayList<>();
+            //首先获取当前星期
+            Integer week = DateUtil.getWeek();
+            //根据当前日期，查询本周数据
+            Date date;
+            String dateMin, dateMax;
+            for (int i = 0; i < week; i++) {
+                date = DateUtil.getSomeDay(0 - week + 1 + i);
+                dateMin = DateUtil.date2String(date, "yy-MM-dd 00:00:00");
+                dateMax = DateUtil.date2String(date, "yy-MM-dd 23:59:59");
+                Integer playNum = advertisementDao.statisticAllWeekData(dateMin, dateMax);
+                nowWeekDataList.add(playNum);
+            }
+            //不足一星期补0
+            for (int i = week; i < 7; i++) {
+                nowWeekDataList.add(0);
+            }
+            data.setNowWeekDataList(nowWeekDataList);
+            //获取上周的数据
+            lastWeekDataList = new ArrayList<>();
+            for (int i = 0; i < 7; i++) {
+                date = DateUtil.getSomeDay(0 - week - 7 + 1 + i);
+                dateMin = DateUtil.date2String(date, "yy-MM-dd 00:00:00");
+                dateMax = DateUtil.date2String(date, "yy-MM-dd 23:59:59");
+                Integer playNum = advertisementDao.statisticAllWeekData(dateMin, dateMax);
+                lastWeekDataList.add(playNum);
+            }
+            data.setLastWeekDataList(lastWeekDataList);
         } else {
-
+            //查询各个性别人数
+            maleData = advertisementDao.statisticOneGenderData("male", adId);
+            femaleData = advertisementDao.statisticOneGenderData("female", adId);
+            data.setMaleNum(maleData);
+            data.setFemaleNum(femaleData);
+            //根据年龄的ageList查询所有的年龄段人数
+            ageDataList = new ArrayList<>();
+            int min = 0, max = 0;
+            for (int i = 0; i < 8; i++) {
+                min = ageList[i];
+                max = ageList[i + 1];
+                int num = advertisementDao.statisticOneAgeData(min, max, adId);
+                ageDataList.add(num);
+            }
+            data.setAgeDataList(ageDataList);
+            //根据日期查询一星期内的播放数量
+            String now = DateUtil.date2String(new Date(), "yy-MM-dd HH:mm:ss");
+            //获取本周的数据
+            nowWeekDataList = new ArrayList<>();
+            //首先获取当前星期
+            Integer week = DateUtil.getWeek();
+            //根据当前日期，查询本周数据
+            Date date;
+            String dateMin, dateMax;
+            for (int i = 0; i < week; i++) {
+                date = DateUtil.getSomeDay(0 - week + 1 + i);
+                dateMin = DateUtil.date2String(date, "yy-MM-dd 00:00:00");
+                dateMax = DateUtil.date2String(date, "yy-MM-dd 23:59:59");
+                Integer playNum = advertisementDao.statisticOneWeekData(dateMin, dateMax, adId);
+                nowWeekDataList.add(playNum);
+            }
+            //不足一星期补0
+            for (int i = week; i < 7; i++) {
+                nowWeekDataList.add(0);
+            }
+            data.setNowWeekDataList(nowWeekDataList);
+            //获取上周的数据
+            lastWeekDataList = new ArrayList<>();
+            for (int i = 0; i < 7; i++) {
+                date = DateUtil.getSomeDay(0 - week - 7 + 1 + i);
+                dateMin = DateUtil.date2String(date, "yy-MM-dd 00:00:00");
+                dateMax = DateUtil.date2String(date, "yy-MM-dd 23:59:59");
+                Integer playNum = advertisementDao.statisticOneWeekData(dateMin, dateMax, adId);
+                lastWeekDataList.add(playNum);
+            }
+            data.setLastWeekDataList(lastWeekDataList);
         }
         return data;
     }

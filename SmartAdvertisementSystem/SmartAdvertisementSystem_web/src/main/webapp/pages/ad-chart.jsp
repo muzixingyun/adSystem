@@ -81,12 +81,13 @@
                     </ol>
                 </section>
 
-                <select class="form-control" style="width: 20%">
+                <select class="form-control" id="adSelect" style="width: 20%" onchange="changeSelect()">
                     <option>请选择广告</option>
                     <c:forEach items="${adList}" var="advertisement">
-                        <option>${advertisement.adName}</option>
+                        <option value="${advertisement.id}+${advertisement.adName}">${advertisement.adName}</option>
                     </c:forEach>
                 </select>
+                <h2>${data.adName}的数据为</h2>
                 <!-- Main content -->
                 <section class="content">
                     <div class="row">
@@ -245,6 +246,15 @@
                 }
             }
 
+            //设置option改变查询
+            function changeSelect() {
+                var adValue = $("#adSelect").val();
+                var arr= adValue.split("+");
+                var adId = arr[0];
+                var adName = arr[1];
+                window.location.href = "${pageContext.request.contextPath}/advertisement/statisticData?adName=" + adName + "&adId=" + adId;
+            }
+
             $(function () {
                 /* ChartJS
                  * -------
@@ -377,7 +387,7 @@
                     series: [{
                         name: '最高次数',
                         type: 'line',
-                        data: [10, 11, 13, 11, 12, 12, 9],
+                        data: ${data.nowWeekDataList},
                         markPoint: {
                             data: [{
                                 type: 'max',
@@ -399,7 +409,7 @@
                         {
                             name: '最低次数',
                             type: 'line',
-                            data: [1, -2, 2, 5, 3, 2, 0],
+                            data: ${data.lastWeekDataList},
                             markPoint: {
                                 data: [{
                                     name: '周最低',

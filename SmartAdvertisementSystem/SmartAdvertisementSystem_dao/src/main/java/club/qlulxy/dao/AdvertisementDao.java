@@ -29,10 +29,27 @@ public interface AdvertisementDao {
     @Delete("delete from advertisements where id = #{id}")
     void deleteAd(Integer id);
 
+    //以下三个方法均为查询所有的数据定制
     @Select("select count(*) from ad_effect where audienceGender = #{gender}")
     int statisticAllGenderData(String gender);
 
 
     @Select("select count(*) from ad_effect where audienceAge >= #{min} and audienceAge < #{max}")
-    int statisticAllAgeData(@Param("min") int min,@Param("max") int max);
+    int statisticAllAgeData(@Param("min") int min, @Param("max") int max);
+
+
+    @Select("select count(*) from ad_effect where playDay between #{min} and #{max}")
+    int statisticAllWeekData(@Param("min") String min, @Param("max") String max);
+
+    //以下三个方法为查询特定广告的数据
+    @Select("select count(*) from ad_effect where audienceGender = #{gender} and adId = #{adId}")
+    int statisticOneGenderData(@Param("gender") String gender, @Param("adId") Integer adId);
+
+
+    @Select("select count(*) from ad_effect where audienceAge >= #{min} and audienceAge < #{max} and adId = #{adId}")
+    int statisticOneAgeData(@Param("min") int min, @Param("max") int max, @Param("adId") Integer adId);
+
+
+    @Select("select count(*) from ad_effect where playDay between #{min} and #{max} and adId = #{adId}")
+    int statisticOneWeekData(@Param("min") String min, @Param("max") String max, @Param("adId") Integer adId);
 }

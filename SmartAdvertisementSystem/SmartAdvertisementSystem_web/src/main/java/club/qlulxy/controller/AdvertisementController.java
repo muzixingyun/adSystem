@@ -93,6 +93,7 @@ public class AdvertisementController {
         model.addAttribute("adList", adList);
         //查询某个广告的数据信息
         StatisticData data = advertisementService.statisticData(adName, adId);
+        data.setAdName(adName);
         model.addAttribute("data", data);
         return "ad-chart";
     }
